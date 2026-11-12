@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIA'O - Deudas y Pagos</title>
+<meta name="description" content="FIA'O: controla fiados, pagos, clientes e inventario de tu negocio.">
+<meta name="theme-color" content="#c91b1c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http\\://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c91b1c'/%3E%3Ctext x='32' y='44' font-size='34' font-weight='900' text-anchor='middle' fill='%23ffbf32' font-family='Arial'%3EF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+<!-- ============ ACCESO ============ -->
+<section id="authScreen" aria-label="Acceso a FIA'O">
+  <div class="auth-shell">
+    <div class="auth-brand-panel">
+      <div class="auth-brand">FIA<span>’O</span></div>
+      <h1>Mantén tu negocio <em>en movimiento.</em></h1>
+      <p>Una forma clara de manejar fiados, pagos y clientes del día a día.</p>
+      <div class="auth-points">
+        <div><b>Sabe cuánto te deben</b><small>Saldos y movimientos de un vistazo</small></div>
+        <div><b>Controla tu crédito</b><small>Bloqueo automático al pasar el límite</small></div>
+        <div><b>Encuentra FIA’O</b><small>Mapa de las zonas donde estamos</small></div>
+      </div>
+    </div>
+    <div class="auth-form-panel">
+      <h2 id="authTitle">Inicia sesión</h2>
+      <p id="authSub">Tu negocio, justo donde lo dejaste.</p>
+      <div class="auth-tabs">
+        <button type="button" class="active" data-mode="signin">Iniciar sesión</button>
+        <button type="button" data-mode="signup">Crear cuenta</button>
+      </div>
+      <form id="authForm" novalidate>
+        <div id="signupExtra" hidden>
+          <div class="auth-field"><label for="aName">Nombre completo</label><input id="aName" autocomplete="name"></div>
+          <div class="auth-roles">
+            <button type="button" class="selected" data-role="owner">Dueño de negocio</button>
+            <button type="button" data-role="client">Cliente</button>
+          </div>
+        </div>
+        <div class="auth-field"><label for="aEmail">Correo</label><input id="aEmail" type="email" placeholder="tu@correo.com" autocomplete="email"></div>
+        <div class="auth-field"><label for="aPass">Contraseña</label><input id="aPass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password"></div>
+        <div class="auth-field" id="confirmWrap" hidden><label for="aConfirm">Confirmar contraseña</label><input id="aConfirm" type="password" autocomplete="new-password"></div>
+        <div class="auth-msg" id="authMsg" role="status" aria-live="polite"></div>
+        <button class="auth-submit" id="authSubmit" type="submit">Iniciar sesión</button>
+      </form>
+      <p class="auth-demo">¿Solo quieres probar? <button type="button" id="demoLogin">Entrar con cuenta demo</button></p>
+    </div>
+  </div>
+</section>
+<div id="app">
+<nav class="navbar">
+  <div class="logo">FIA<span>’O</span></div>
+  <button class="menu" id="menuButton" aria-label="Menú">☰</button>
+  <div class="nav-links" id="navLinks">
+    <button data-page="home" data-i18n="home">Home</button>
+    <button data-page="credit" data-i18n="credit">Credit</button>
+    <button data-page="products" data-i18n="products">Products</button>
+    <button data-page="clients" data-i18n="clients">Clients</button>
+    <button data-page="reports" data-i18n="reports">Reports</button>
+    <button data-page="map" data-i18n="map">Map</button>
+    <button data-page="contact" data-i18n="contact">Contact</button>
+  </div>
+</nav>
+<div class="toolbar">
+  <button class="tool" id="notificationButton" title="Notificaciones">🔔<span class="badge" id="notifBadge">0</span></button>
+  <button class="tool" id="langButton" title="Idioma">🌐 ES</button>
+  <button class="tool" id="darkButton" title="Modo oscuro">🌓</button>
+  <button class="tool" id="logoutButton" title="Cerrar sesión">🚪</button>
+</div>
+<!-- HOME -->
+<section class="page active" id="home">
+  <div class="hero">
+    <h1 data-i18n="homeTitle">Debts <span>&</span> Payments</h1>
+    <p data-i18n="homeSub">Manage customer debts, register payments, and track balances easily.</p>
+  </div>
+  <div class="dashboard">
+    <div class="col">
+      <div class="card"><h2>👤 Select a Customer</h2><select id="customerSelect"></select></div>
+      <div class="card">
+        <div class="customer-title"><span id="statusDot">🔴</span> <span id="customerName"></span></div>
+        <div class="stats">
+          <div class="stat"><small>Current Debt</small><strong class="red" id="currentDebt"></strong></div>
+          <div class="stat"><small>Credit Limit</small><strong id="creditLimit"></strong></div>
+        </div>
+        <div class="progress-info"><span id="percentage"></span><span id="limitText"></span></div>
+        <div class="progress"><span id="progressBar"></span></div>
+      </div>
+      <div class="card">
+        <h2>🛡 Automatic Blocking</h2>
+        <p class="subtitle">If a customer exceeds the debt limit, the system prevents new credits.</p>
+        <label style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:12px">Enabled
+          <input type="checkbox" id="blocking" style="width:22px;height:22px;accent-color:#c91b1c"></label>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Debt History</h2><p class="subtitle">Track all purchases and payments.</p>
+      <div class="history-list" id="historyList"></div>
+      <button class="primary" id="historyButton">View Full History →</button>
+    </div>
+    <div class="col">
+      <div class="card"><h2>Recent Activity</h2><div id="activityList"></div><button class="primary" id="activityButton">View all activity →</button></div>
+      <div class="card"><h2>Debt Overview</h2>
+        <div class="overview-grid">
+          <div class="stat"><small>Outstanding Debt</small><strong class="red" id="ovDebt"></strong></div>
+          <div class="stat"><small>Payments Today</small><strong class="red" id="ovToday"></strong></div>
+          <div class="stat"><small>Customers with Debt</small><strong class="red" id="ovCust"></strong></div>
+          <div class="stat"><small>Overdue</small><strong class="red" id="ovOver"></strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- CREDIT -->
+<section class="page" id="credit">
+  <div class="hero"><h1 data-i18n="creditTitle">Credit <span>Management</span></h1><p>Register purchases and payments.</p></div>
+  <div class="action-grid">
+    <div class="card">
+      <h2>Register Credit</h2><p class="subtitle">Add a new purchase to a customer's balance.</p>
+      <div class="form-group"><label>Customer</label><select id="creditCustomer"></select></div>
+      <div class="form-group"><label>Purchase description</label><input id="purchaseDescription" placeholder="Example: Groceries"></div>
+      <div class="form-group"><label>Amount</label><input type="number" min="0" step="0.01" id="creditAmount" placeholder="B/. 0.00"></div>
+      <button class="primary" id="addCredit">Register Credit</button>
+    </div>
+    <div class="card">
+      <h2>Register Payment</h2><p class="subtitle">Record payments made by customers.</p>
+      <div class="form-group"><label>Customer</label><select id="paymentCustomer"></select></div>
+      <div class="form-group"><label>Payment Amount</label><input type="number" min="0" step="0.01" id="paymentAmount" placeholder="B/. 0.00"></div>
+      <div class="button-row"><button class="primary" id="registerPayment">Register Payment</button><button class="secondary" id="markPaid">Mark as Paid</button></div>
+    </div>
+  </div>
+</section>
+<!-- PRODUCTS -->
+<section class="page" id="products">
+  <div class="container">
+    <div class="page-head"><div><div class="kicker">📦 INVENTORY</div><h1>Your inventory, <span>always exact</span></h1><p>Search, edit or add products without leaving this page.</p></div></div>
+    <div class="toolbar-row">
+      <input class="search" id="productSearch" type="search" placeholder="Search product by name...">
+      <div class="chips" id="productFilters">
+        <button class="chip active" data-cat="All">All</button><button class="chip" data-cat="Pantry">Pantry</button><button class="chip" data-cat="Bakery">Bakery</button><button class="chip" data-cat="Beverages">Beverages</button><button class="chip" data-cat="Dairy">Dairy</button>
+      </div>
+    </div>
+    <div class="product-grid" id="productGrid"></div>
+    <div class="summary"><span>Inventory status</span><strong><span id="productCount">0</span> products registered</strong></div>
+  </div>
+</section>
+<!-- CLIENTS -->
+<section class="page" id="clients">
+  <div class="container client-layout">
+    <div>
+      <div class="kicker">👥 CUSTOMER HUB</div>
+      <h1 style="font-size:36px;letter-spacing:-1px">Client <span style="color:var(--gold)">Management</span></h1>
+      <h2>Each client, with a clear account</h2>
+      <p style="font-size:13px;line-height:1.6;margin-bottom:16px">Register your customers in seconds and see at a glance who is up to date, who owes, and who needs a reminder.</p>
+      <button class="primary" id="addClient">＋ Add client</button>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-top">
+          <input class="search" id="clientSearch" type="search" placeholder="Search client by name or phone..." style="border-color:rgba(143,17,23,.2)">
+          <div class="chips" id="clientFilters"><button class="chip active" data-st="All">All</button><button class="chip" data-st="On Time">On Time</button><button class="chip" data-st="Pending">Pending</button><button class="chip" data-st="Overdue">Overdue</button></div>
+        </div>
+        <div class="trow head"><div>Client</div><div>Purchases</div><div>Pending Debt</div><div>Status</div><div>Actions</div></div>
+        <div id="clientsTable"></div>
+      </div>
+      <div class="reminder"><div><strong>◉ Automatic Reminder</strong><small id="reminderText"></small></div><button class="primary" id="sendReminder">Send</button></div>
+    </div>
+  </div>
+</section>
+<!-- REPORTS -->
+<section class="page" id="reports">
+  <div class="container">
+    <div class="page-head"><div><div class="kicker">◔ ANALYTICS</div><h1>FIA'O <span>Reports</span></h1><p>Financial tracking, credit summaries, and business analytics overview.</p></div>
+      <div class="button-row"><button class="primary" id="exportPdf">📄 Export PDF</button><button class="primary" id="exportCsv">▣ Export Excel</button></div></div>
+    <div class="report-filters">
+      <div class="form-group"><label>Date range</label><input type="date" id="dateFrom"></div>
+      <div class="form-group"><label>To</label><input type="date" id="dateTo"></div>
+      <div class="form-group"><label>Customer</label><select id="reportCustomerFilter"></select></div>
+      <button class="primary" id="applyFilters">⚑ Apply Filters</button>
+    </div>
+    <div class="rstats" id="reportStats"></div>
+    <div class="rgrid">
+      <div class="rpanel"><h3>Credit Activity & Payments Flow</h3>
+        <div class="legend"><span><i class="c-credit"></i>Credit Issued</span><span><i class="c-pay"></i>Payments Received</span><span><i class="c-over"></i>Pending</span></div>
+        <div class="bars" id="barChart"></div></div>
+      <div class="rpanel"><h3>Payment Status Breakdown</h3><div id="breakdown"></div></div>
+    </div>
+    <div class="ttable"><h3>Recent Credit Transactions</h3>
+      <div class="trow head"><div>Customer</div><div>Description</div><div>Amount</div><div>Date</div><div>Type</div></div>
+      <div id="reportTransactions"></div></div>
+  </div>
+</section>
+<!-- MAP -->
+<section class="page" id="map-page">
+  <div class="container">
+    <div class="page-head"><div><div class="kicker">📍 COVERAGE</div><h1>Where to find <span>FIA'O</span></h1><p>Choose a location in the list or tap a marker on the map.</p></div>
+      <button class="primary" id="locateMe">📍 Find nearest</button></div>
+    <div class="map-layout"><div id="map" role="application" aria-label="Mapa de FIA'O"></div><div class="map-list" id="mapList"></div></div>
+  </div>
+</section>
+<!-- CONTACT -->
+<section class="page" id="contact">
+  <div class="container contact-layout">
+    <div>
+      <div class="kicker">💬 SUPPORT</div>
+      <h1>Need help? <span>We are here to help</span></h1>
+      <p>Check the FAQs below or send us a message anytime.</p>
+      <div id="faqList"></div>
+    </div>
+    <div class="card">
+      <h2>✉ Contact form</h2>
+      <div class="form-group"><label>Name</label><input id="contactName" placeholder="Your name"></div>
+      <div class="form-group"><label>Email</label><input id="contactEmail" type="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Message</label><textarea id="contactMessage" rows="5" placeholder="Tell us how we can help you"></textarea></div>
+      <button class="primary" id="sendMessage">Send message</button>
+    </div>
+  </div>
+</section>
+<footer>FIA'O · Debts, payments and customer management</footer>
+<div class="notification" id="notification" role="status" aria-live="polite"></div>
+<dialog id="modal"><form id="modalForm"><h3 id="modalTitle"></h3><div class="modal-fields" id="modalFields"></div>
+  <div class="button-row"><button class="primary" type="submit">Save</button><button class="secondary" type="button" id="modalCancel">Cancel</button></div></form></dialog>
+</div>
+<script src="script.js" defer></script>
+
+</body>
+</html>
